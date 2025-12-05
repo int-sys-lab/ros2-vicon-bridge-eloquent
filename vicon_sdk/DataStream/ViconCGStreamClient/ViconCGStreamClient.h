@@ -275,7 +275,7 @@ protected:
 
   std::weak_ptr< IViconCGStreamClientCallback > m_pCallback;
 
-  boost::asio::io_context m_IOContext;
+  boost::asio::io_service m_IOContext;
   std::shared_ptr< boost::asio::ip::tcp::socket > m_pSocket;
   std::shared_ptr< boost::asio::ip::udp::socket > m_pMulticastSocket;
 

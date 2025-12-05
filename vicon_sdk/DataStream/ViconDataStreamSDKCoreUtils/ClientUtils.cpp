@@ -173,7 +173,7 @@ namespace ClientUtils
 
   bool IsValidMulticastIP( const std::string & i_MulticastIPAddress )
   {
-    boost::asio::io_context IOContext;
+    boost::asio::io_service IOContext;
     boost::system::error_code Error;
     boost::asio::ip::address_v4 Address = boost::asio::ip::address_v4::from_string( i_MulticastIPAddress, Error );
     if( Error )

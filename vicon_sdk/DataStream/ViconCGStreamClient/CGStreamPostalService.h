@@ -25,8 +25,7 @@
 #pragma once
 
 #include <memory>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/post.hpp>
+#include <boost/asio/io_service.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -36,7 +35,7 @@ class VCGStreamPostalService
 public:
   void Post( const std::function< void() >& i_rFunction ) const
   {
-    boost::asio::post( *m_pIOContext, i_rFunction );
+    m_pIOContext->post(i_rFunction );
   }
 
   bool StartService()
@@ -44,12 +43,12 @@ public:
     boost::mutex::scoped_lock Lock( m_Mutex );
     if( !m_pIOContext )
     {
-      m_pIOContext = std::make_shared< boost::asio::io_context >();
+      m_pIOContext = std::make_shared< boost::asio::io_service >();
     }
 
     if( !m_pWorkGuard )
     {
-      m_pWorkGuard = std::make_unique< TWorkGuard >( boost::asio::make_work_guard( *m_pIOContext ) );
+      m_pWorkGuard.reset(new boost::asio::io_service::work( *m_pIOContext ) );
       m_Thread = boost::thread( std::bind( &VCGStreamPostalService::ThreadFunction, this ) );
     }
 
@@ -63,7 +62,7 @@ public:
     {
       m_pWorkGuard.reset();
       m_Thread.join();
-      m_pIOContext->restart();
+      m_pIOContext->reset();
       return true;
     }
     return false;
@@ -75,9 +74,8 @@ public:
   }
 
 private:
-  using TWorkGuard = decltype( boost::asio::make_work_guard( std::declval< boost::asio::io_context& >() ) );
   mutable boost::mutex m_Mutex;
-  std::shared_ptr< boost::asio::io_context > m_pIOContext;
-  std::unique_ptr< TWorkGuard > m_pWorkGuard;
+  std::shared_ptr< boost::asio::io_service > m_pIOContext;
+  std::unique_ptr< boost::asio::io_service::work > m_pWorkGuard;
   boost::thread m_Thread;
 };
